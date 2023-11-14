@@ -1,4 +1,5 @@
 import random
+import rospy
 import socket  # for communicating with the broker
 import time  # for sleeping 0.5 seconds
 
@@ -33,7 +34,30 @@ def __generate_publish_message(topic_name: str = "default", data=[0]):
     return SEPERATOR.join(["PUB", topic_name, str(data)])
 
 
+
 if __name__ == "__main__":
+    try:
+
+        rospy.init_node('broker_publisher', anonymous=True)
+
+        pub = rospy.Publisher('broker_topic', String, queue_size=10)
+
+        while not rospy.is_shutdown():
+            random_topic = __get_random_topic()
+
+            random_data = __generate_random_data_for_topic(random_topic)
+
+            publish_message = __generate_publish_message(random_topic, random_data)
+
+            pub.publish(publish_message)
+
+            time.sleep(0.5)
+
+    except rospy.ROSInterruptException:
+        print("ROS Interrupt Exception occurred.")
+    except KeyboardInterrupt:
+        print("Exiting the publisher client.")
+
     """
         Description:
             - aim is to write a publisher client, which communicates in UDP

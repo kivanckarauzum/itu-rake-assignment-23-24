@@ -37,3 +37,37 @@ if __name__ == "__main__":
             python sub.py -topic=image_processor
     """
     # write your code here
+    parser = argparse.ArgumentParser(description='Subscriber Client')
+    parser.add_argument('-topic', type=str, help='Specify the topic to subscribe')
+    args = parser.parse_args()
+    if args.topic:
+        TOPIC = args.topic
+        udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        try:
+            udp_socket.connect((BROKER_HOST, BROKER_PORT))
+            subscribe_message = __generate_subscribe_message(TOPIC)
+
+            udp_socket.send(subscribe_message.encode(FORMAT))
+            print(f"Subscribed to the topic: {TOPIC}")
+
+            ack = udp_socket.recv(BUFFER_SIZE).decode(FORMAT)
+            if ack == ACK:
+                print("Received ACK from the broker.")
+            else:
+                print("Failed to receive proper ACK from the broker.")
+                exit()
+
+
+            while True:
+                data = udp_socket.recv(BUFFER_SIZE).decode(FORMAT)
+                data_array = __string_to_array(data)
+                print(f"Received data: {data_array}")
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+        finally:
+            udp_socket.close()
+    else:
+        print("Please specify the topic using the -topic argument.")
